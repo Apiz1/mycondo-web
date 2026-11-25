@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../auth/auth-context'
 import { useUnreadCount } from '../notifications/useUnreadCount'
@@ -9,6 +10,7 @@ export interface LayoutContext {
 export default function AppLayout() {
   const { user, logout } = useAuth()
   const { count, refresh } = useUnreadCount()
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false)
 
   const navClass = ({ isActive }: { isActive: boolean }) =>
     `rounded-lg px-3 py-2 text-sm font-medium transition ${
@@ -16,6 +18,11 @@ export default function AppLayout() {
         ? 'bg-brand-50 text-brand-700'
         : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
     }`
+
+  function confirmLogout() {
+    setLogoutDialogOpen(false)
+    void logout()
+  }
 
   return (
     <div className="min-h-screen bg-brand-50/60 text-slate-900">
@@ -29,13 +36,9 @@ export default function AppLayout() {
               <span className="text-base font-semibold tracking-tight">MyCondo</span>
             </Link>
             <nav aria-label="Main navigation" className="flex items-center gap-1">
-              <NavLink to="/" end className={navClass}>
-                Home
-              </NavLink>
-              {/* Invoices and Bookings links go here as we build those pages */}
+              <NavLink to="/" end className={navClass}>Home</NavLink>
+              <NavLink to="/invoices" className={navClass}>Invoices</NavLink>
             </nav>
-
-            <NavLink to="/invoices" className={navClass}>Invoices</NavLink>
           </div>
 
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
@@ -55,11 +58,10 @@ export default function AppLayout() {
               )}
             </Link>
 
-            <span className="hidden max-w-36 truncate text-sm text-slate-600 sm:inline">
-              {user?.name}
-            </span>
+            <span className="hidden max-w-36 truncate text-sm text-slate-600 sm:inline">{user?.name}</span>
             <button
-              onClick={logout}
+              type="button"
+              onClick={() => setLogoutDialogOpen(true)}
               className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-brand-500/10"
             >
               Sign out
@@ -71,6 +73,44 @@ export default function AppLayout() {
       <main className="mx-auto max-w-6xl px-4 py-7 sm:px-6 sm:py-9">
         <Outlet context={{ refreshUnread: refresh } satisfies LayoutContext} />
       </main>
+
+      {logoutDialogOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 px-4 py-6" onMouseDown={(event) => {
+          if (event.target === event.currentTarget) setLogoutDialogOpen(false)
+        }}>
+          <section
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="logout-dialog-title"
+            aria-describedby="logout-dialog-description"
+            className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-xl"
+          >
+            <h2 id="logout-dialog-title" className="text-lg font-semibold tracking-tight text-slate-900">
+              Sign out of MyCondo?
+            </h2>
+            <p id="logout-dialog-description" className="mt-2 text-sm leading-6 text-slate-500">
+              Are you sure you want to sign out?
+            </p>
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                type="button"
+                autoFocus
+                onClick={() => setLogoutDialogOpen(false)}
+                className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-brand-500/10"
+              >
+                Stay signed in
+              </button>
+              <button
+                type="button"
+                onClick={confirmLogout}
+                className="rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700 focus:outline-none focus:ring-4 focus:ring-brand-500/20"
+              >
+                Yes, sign out
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   )
 }
