@@ -1,4 +1,8 @@
 export type Role = 'admin' | 'committee' | 'resident' | 'security'
+export type InvoiceStatus = 'unpaid' | 'overdue' | 'paid'
+export type PaymentStatus = 'pending' | 'approved' | 'rejected'
+export type PaymentMethod = 'transfer' | 'billplz'
+
 
 export interface User {
   id: number
@@ -21,4 +25,30 @@ export interface AppNotification {
 export interface Paginated<T> {
   data: T[]
   meta: { current_page: number; last_page: number }
+}
+
+export interface Payment {
+    id: number
+    invoice_id: number
+    method: PaymentMethod
+    amount: string
+    status: PaymentStatus
+    note: string | null
+    review_note: string | null
+    submitted_at: string
+    reviewed_at: string | null
+    payment_url?: string
+  }
+
+export interface Invoice {
+    id: number
+    period: string // "2026-11"
+    amount: string
+    due_date: string // "2026-11-15"
+    status: InvoiceStatus
+    payments?: Payment[]
+  }
+
+export interface Wrapped<T> {
+  data: T
 }

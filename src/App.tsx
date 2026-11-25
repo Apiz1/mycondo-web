@@ -2,6 +2,8 @@ import { Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from './auth/ProtectedRoute'
 import AppLayout from './components/AppLayout'
 import Home from './pages/Home'
+import InvoiceDetail from './pages/InvoiceDetail'
+import Invoices from './pages/Invoices'
 import Login from './pages/Login'
 import Notifications from './pages/Notifications'
 
@@ -12,6 +14,8 @@ export default function App() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<Home />} />
+          <Route path="/invoices" element={<Invoices />} />
+          <Route path="/invoices/:id" element={<InvoiceDetail />} />
           <Route path="/notifications" element={<Notifications />} />
         </Route>
       </Route>

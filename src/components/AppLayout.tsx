@@ -34,6 +34,8 @@ export default function AppLayout() {
               </NavLink>
               {/* Invoices and Bookings links go here as we build those pages */}
             </nav>
+
+            <NavLink to="/invoices" className={navClass}>Invoices</NavLink>
           </div>
 
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">

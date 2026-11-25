@@ -27,16 +27,23 @@ interface RequestOptions {
 
 export async function api<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const token = tokenStore.get()
+  const isForm = options.body instanceof FormData
 
   const headers: Record<string, string> = { Accept: 'application/json' }
-  if (options.body !== undefined) headers['Content-Type'] = 'application/json'
+  // For FormData the browser sets the Content-Type itself, including the boundary
+  if (options.body !== undefined && !isForm) headers['Content-Type'] = 'application/json'
   if (token) headers.Authorization = `Bearer ${token}`
 
-  const response = await fetch(`${BASE_URL}${path}`, {
-    method: options.method ?? 'GET',
-    headers,
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-  })
+   const response = await fetch(`${BASE_URL}${path}`, {
+      method: options.method ?? 'GET',
+      headers,
+      body:
+        options.body === undefined
+          ? undefined
+          : isForm
+            ? (options.body as FormData)
+            : JSON.stringify(options.body),
+    })
 
   if (response.status === 204) return undefined as T
 
