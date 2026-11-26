@@ -44,6 +44,7 @@ export default function AppLayout() {
             <nav aria-label="Main navigation" className="flex items-center gap-1">
               <NavLink to="/" end className={navClass}>Home</NavLink>
               <NavLink to="/invoices" className={navClass}>Invoices</NavLink>
+              <NavLink to="/bookings" className={navClass}>Bookings</NavLink>
             </nav>
           </div>
 

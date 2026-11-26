@@ -2,6 +2,7 @@ export type Role = 'admin' | 'committee' | 'resident' | 'security'
 export type InvoiceStatus = 'unpaid' | 'overdue' | 'paid'
 export type PaymentStatus = 'pending' | 'approved' | 'rejected'
 export type PaymentMethod = 'transfer' | 'billplz'
+export type BookingStatus = 'pending' | 'approved' | 'rejected' | 'cancelled'
 
 
 export interface User {
@@ -50,5 +51,32 @@ export interface Invoice {
   }
 
 export interface Wrapped<T> {
-  data: T
-}
+    data: T
+  }
+
+  export interface Facility {
+    id: number
+    name: string
+    open_time: string
+    close_time: string
+    max_duration_minutes: number
+    needs_approval: boolean
+  }
+
+  export interface Booking {
+    id: number
+    facility?: Facility
+    start_at: string
+    end_at: string
+    status: BookingStatus
+    purpose: string | null
+    review_note: string | null
+  }
+
+  export interface Availability {
+    facility_id: number
+    date: string
+    open_time: string
+    close_time: string
+    booked: { start_at: string; end_at: string; status: BookingStatus }[]
+  }
