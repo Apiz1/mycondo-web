@@ -3,6 +3,8 @@ export type InvoiceStatus = 'unpaid' | 'overdue' | 'paid'
 export type PaymentStatus = 'pending' | 'approved' | 'rejected'
 export type PaymentMethod = 'transfer' | 'billplz'
 export type BookingStatus = 'pending' | 'approved' | 'rejected' | 'cancelled'
+export type ComplaintStatus = 'open' | 'in_progress' | 'resolved' | 'closed'
+
 
 
 export interface User {
@@ -79,4 +81,24 @@ export interface Wrapped<T> {
     open_time: string
     close_time: string
     booked: { start_at: string; end_at: string; status: BookingStatus }[]
+  }
+
+  export interface ComplaintComment {
+    id: number
+    body: string
+    created_at: string
+    author?: { id: number; name: string; role: Role }
+  }
+
+  export interface Complaint {
+    id: number
+    category: string
+    title: string
+    description: string
+    status: ComplaintStatus
+    has_photo: boolean
+    unit?: { id: number }
+    reporter?: { id: number; name: string }
+    comments?: ComplaintComment[]
+    created_at?: string
   }

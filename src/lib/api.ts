@@ -59,3 +59,14 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
 
   return data as T
 }
+
+export async function apiBlob(path: string): Promise<Blob> {
+  const token = tokenStore.get()
+
+  const response = await fetch(`${BASE_URL}${path}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  })
+
+  if (!response.ok) throw new ApiError(response.status, 'Could not load the file.')
+  return response.blob()
+}

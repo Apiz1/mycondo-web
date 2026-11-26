@@ -45,6 +45,7 @@ export default function AppLayout() {
               <NavLink to="/" end className={navClass}>Home</NavLink>
               <NavLink to="/invoices" className={navClass}>Invoices</NavLink>
               <NavLink to="/bookings" className={navClass}>Bookings</NavLink>
+              <NavLink to="/complaints" className={navClass}>Complaints</NavLink>
             </nav>
           </div>
 
