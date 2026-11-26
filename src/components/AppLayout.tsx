@@ -14,7 +14,7 @@ export interface LayoutContext {
 
 export default function AppLayout() {
   const { user, logout } = useAuth()
-  const { count, refresh } = useUnreadCount()
+  const { count, refresh } = useUnreadCount(10_000)
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false)
 
   const navClass = ({ isActive }: { isActive: boolean }) =>

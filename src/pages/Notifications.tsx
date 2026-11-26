@@ -46,15 +46,6 @@ export default function Notifications() {
   if (page === 1) void load(1, filter === 'unread', true)
 })
 
-  const previousCount = useRef(unreadCount)
-
-  useEffect(() => {
-    // A new notification arrived: reload the first page
-    if (unreadCount > previousCount.current) {
-      void load(1, filter === 'unread')
-    }
-    previousCount.current = unreadCount
-  }, [unreadCount, filter, load])
 
   async function markRead(notification: AppNotification) {
     if (notification.read_at) return
