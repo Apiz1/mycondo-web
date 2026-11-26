@@ -4,6 +4,7 @@ import type { LayoutContext } from '../components/AppLayout'
 import { api } from '../lib/api'
 import { timeAgo } from '../lib/time'
 import type { AppNotification, Paginated } from '../types'
+import { usePolling } from '../lib/usePolling'
 
 type Filter = 'all' | 'unread'
 
@@ -17,9 +18,11 @@ export default function Notifications() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const load = useCallback(async (pageNumber: number, unreadOnly: boolean) => {
-    setLoading(true)
-    setError(null)
+  const load = useCallback(async (pageNumber: number, unreadOnly: boolean, silent = false) => {
+    if (!silent) {
+      setLoading(true)
+      setError(null)
+    }
 
     try {
       const query = `?page=${pageNumber}${unreadOnly ? '&unread=1' : ''}`
@@ -29,15 +32,19 @@ export default function Notifications() {
       setPage(result.meta.current_page)
       setLastPage(result.meta.last_page)
     } catch {
-      setError('Could not load notifications.')
+      if (!silent) setError('Could not load notifications.')
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }, [])
 
   useEffect(() => {
     void load(1, filter === 'unread')
   }, [filter, load])
+
+  usePolling(() => {
+  if (page === 1) void load(1, filter === 'unread', true)
+})
 
   const previousCount = useRef(unreadCount)
 

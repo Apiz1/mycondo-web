@@ -14,6 +14,7 @@ export default function NewBooking() {
   const [end, setEnd] = useState('')
   const [purpose, setPurpose] = useState('')
   const [busy, setBusy] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({})
 
@@ -47,8 +48,14 @@ export default function NewBooking() {
   const fieldClass = 'mt-2 w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition hover:border-slate-300 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10'
   const labelClass = 'block text-sm font-medium text-slate-700'
 
-  async function submit(event: FormEvent) {
+  function submit(event: FormEvent) {
     event.preventDefault()
+    setError(null)
+    setFieldErrors({})
+    setConfirmOpen(true)
+  }
+
+  async function createBooking() {
     setBusy(true)
     setError(null)
     setFieldErrors({})
@@ -198,6 +205,58 @@ export default function NewBooking() {
           </div>
         )}
       </form>
+
+      {confirmOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 px-4 py-6"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setConfirmOpen(false)
+          }}
+        >
+          <section
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="confirm-booking-title"
+            aria-describedby="confirm-booking-description"
+            className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-xl"
+          >
+            <h2 id="confirm-booking-title" className="text-lg font-semibold tracking-tight text-slate-900">
+              Confirm this booking?
+            </h2>
+            <p id="confirm-booking-description" className="mt-2 text-sm leading-6 text-slate-500">
+              Book {facility?.name || 'this facility'} on {date} from {start} to {end}?
+              {facility?.needs_approval && ' This booking will need committee approval.'}
+            </p>
+            {purpose.trim() && (
+              <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
+                Purpose: {purpose.trim()}
+              </p>
+            )}
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                type="button"
+                autoFocus
+                onClick={() => setConfirmOpen(false)}
+                className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-brand-500/10"
+              >
+                Go back
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  setConfirmOpen(false)
+                  void createBooking()
+                }}
+                className="rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700 focus:outline-none focus:ring-4 focus:ring-brand-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Yes, confirm booking
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </section>
   )
 }
+

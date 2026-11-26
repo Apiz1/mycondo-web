@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import StatusBadge from '../components/StatusBadge'
 import { ApiError, api } from '../lib/api'
 import type { Booking, Paginated, Wrapped } from '../types'
+import { usePolling } from '../lib/usePolling'
 
 export default function Bookings() {
   const [items, setItems] = useState<Booking[]>([])
@@ -12,24 +13,30 @@ export default function Bookings() {
   const [error, setError] = useState<string | null>(null)
   const [bookingToCancel, setBookingToCancel] = useState<Booking | null>(null)
 
-  const load = useCallback(async (pageNumber: number) => {
+  const load = useCallback(async (pageNumber: number, silent = false) => {
+  if (!silent) {
     setLoading(true)
     setError(null)
-    try {
-      const result = await api<Paginated<Booking>>(`/bookings?page=${pageNumber}`)
-      setItems((previous) => (pageNumber === 1 ? result.data : [...previous, ...result.data]))
-      setPage(result.meta.current_page)
-      setLastPage(result.meta.last_page)
-    } catch {
-      setError('Could not load your bookings.')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  }
+  try {
+    const result = await api<Paginated<Booking>>(`/bookings?page=${pageNumber}`)
+    setItems((prev) => (pageNumber === 1 ? result.data : [...prev, ...result.data]))
+    setPage(result.meta.current_page)
+    setLastPage(result.meta.last_page)
+  } catch {
+    if (!silent) setError('Could not load your bookings.')
+  } finally {
+    if (!silent) setLoading(false)
+  }
+}, [])
 
   useEffect(() => {
     void load(1)
   }, [load])
+
+  usePolling(() => {
+  if (page === 1) void load(1, true) // don't disturb someone who pressed "Load more"
+})
 
   async function cancel(id: number) {
     try {
