@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useCallback, useEffect, useRef, useState, type FormEvent  } from 'react'
+import { Link, useOutletContext, useParams } from 'react-router-dom'
 import StatusBadge from '../components/StatusBadge'
 import { ApiError, api } from '../lib/api'
 import { formatDate, formatPeriod, money } from '../lib/format'
 import type { Invoice, Payment, Wrapped } from '../types'
+import type { LayoutContext } from '../components/AppLayout'
 
 export default function InvoiceDetail() {
   const { id } = useParams()
+  const { refreshUnread } = useOutletContext<LayoutContext>()
   const [invoice, setInvoice] = useState<Invoice | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -16,23 +18,57 @@ export default function InvoiceDetail() {
   const [note, setNote] = useState('')
   const [formKey, setFormKey] = useState(0)
 
-  const load = useCallback(async () => {
-    try {
-      const result = await api<Wrapped<Invoice>>(`/invoices/${id}`)
-      setInvoice(result.data)
-      setError(null)
-    } catch (err) {
-      if (err instanceof ApiError && err.status === 403) setError('You cannot view this invoice.')
-      else if (err instanceof ApiError && err.status === 404) setError('Invoice not found.')
-      else setError('Could not load the invoice.')
-    } finally {
-      setLoading(false)
-    }
-  }, [id])
+  const load = useCallback(
+    async (silent = false) => {
+      try {
+        const result = await api<Wrapped<Invoice>>(`/invoices/${id}`)
+        setInvoice(result.data)
+        setError(null)
+      } catch (err) {
+        if (silent) return
+        if (err instanceof ApiError && err.status === 403) setError('You cannot view this invoice.')
+        else if (err instanceof ApiError && err.status === 404) setError('Invoice not found.')
+        else setError('Could not load the invoice.')
+      } finally {
+        setLoading(false)
+      }
+    },
+    [id],
+  )
+
+  const waitingForPayment =
+  invoice?.payments?.some((p) => p.status === 'pending' && p.method === 'billplz') ?? false
 
   useEffect(() => {
     void load()
   }, [load])
+
+useEffect(() => {
+  if (!waitingForPayment) return
+
+  let attempts = 0
+
+  // Check every 3 seconds, for up to about a minute
+  const timer = window.setInterval(() => {
+    attempts += 1
+    if (attempts > 20) {
+      window.clearInterval(timer)
+      return
+    }
+    void load(true)
+  }, 3000)
+
+  // Also check straight away when the user comes back to this tab
+  const onVisible = () => {
+    if (document.visibilityState === 'visible') void load(true)
+  }
+  document.addEventListener('visibilitychange', onVisible)
+
+  return () => {
+    window.clearInterval(timer)
+    document.removeEventListener('visibilitychange', onVisible)
+  }
+}, [waitingForPayment, load])
 
   async function payOnline() {
     setBusy(true)
@@ -79,6 +115,17 @@ export default function InvoiceDetail() {
       setBusy(false)
     }
   }
+
+  const status = invoice?.status
+  const previousStatus = useRef(status)
+
+  useEffect(() => {
+  // The status changed while we were watching: a payment was just reviewed
+  if (previousStatus.current && status && previousStatus.current !== status) {
+    void refreshUnread()
+  }
+  previousStatus.current = status
+}, [status, refreshUnread])
 
   if (loading) return <p className="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-500">Loading invoice…</p>
   if (error || !invoice) {
@@ -130,7 +177,9 @@ export default function InvoiceDetail() {
                 <button onClick={payOnline} disabled={busy} className={`${buttonClass} bg-brand-600 text-white hover:bg-brand-700`}>
                   {busy ? 'Please wait…' : 'Continue to payment'}
                 </button>
-                <button onClick={load} className={`${buttonClass} border border-amber-300 bg-white text-slate-700 hover:bg-amber-100`}>Refresh status</button>
+                <button onClick={() => load()} className="rounded-md border border-slate-300 px-4 py-2 text-sm hover:bg-white">
+                  Refresh status
+                </button>
               </div>
             </>
           ) : (

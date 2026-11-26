@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import type { LayoutContext } from '../components/AppLayout'
 import { api } from '../lib/api'
@@ -8,7 +8,7 @@ import type { AppNotification, Paginated } from '../types'
 type Filter = 'all' | 'unread'
 
 export default function Notifications() {
-  const { refreshUnread } = useOutletContext<LayoutContext>()
+  const { refreshUnread, unreadCount } = useOutletContext<LayoutContext>()
 
   const [filter, setFilter] = useState<Filter>('all')
   const [items, setItems] = useState<AppNotification[]>([])
@@ -38,6 +38,16 @@ export default function Notifications() {
   useEffect(() => {
     void load(1, filter === 'unread')
   }, [filter, load])
+
+  const previousCount = useRef(unreadCount)
+
+  useEffect(() => {
+    // A new notification arrived: reload the first page
+    if (unreadCount > previousCount.current) {
+      void load(1, filter === 'unread')
+    }
+    previousCount.current = unreadCount
+  }, [unreadCount, filter, load])
 
   async function markRead(notification: AppNotification) {
     if (notification.read_at) return

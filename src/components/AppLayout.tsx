@@ -7,6 +7,11 @@ export interface LayoutContext {
   refreshUnread: () => Promise<void>
 }
 
+export interface LayoutContext {
+  refreshUnread: () => Promise<void>
+  unreadCount: number
+}
+
 export default function AppLayout() {
   const { user, logout } = useAuth()
   const { count, refresh } = useUnreadCount()
@@ -23,6 +28,7 @@ export default function AppLayout() {
     setLogoutDialogOpen(false)
     void logout()
   }
+  
 
   return (
     <div className="min-h-screen bg-brand-50/60 text-slate-900">
@@ -71,7 +77,7 @@ export default function AppLayout() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-7 sm:px-6 sm:py-9">
-        <Outlet context={{ refreshUnread: refresh } satisfies LayoutContext} />
+        <Outlet context={{ refreshUnread: refresh, unreadCount: count } satisfies LayoutContext} />
       </main>
 
       {logoutDialogOpen && (
